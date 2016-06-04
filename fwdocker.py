@@ -1,7 +1,16 @@
 #!/usr/bin/env python
+import argparse, sys, subprocess
 
-import argparse, sys
-from docker import Client
+try:
+    from docker import Client
+    docker_available = True
+except ImportError:
+    docker_available = False
+
+if not docker_available:
+    print "please make sure to install docker-py via pip before using this package"
+    print "e.g: sudo pip install docker-py"
+    sys.exit(1)
 
 class FileWaveDockerApi:
     def __init__(self, version="11.0.2", docker_url='unix://var/run/docker.sock'):
@@ -104,6 +113,7 @@ if __name__ == "__main__":
 
     if not api.find_image_named(api.server_image):
         print "cannot create server - image not found:", api.server_image
+        sys.exit(3)
     else:
         # does the container already exist, so that we can just start it?
         server_container = api.find_container_named(api.server_name)
@@ -114,6 +124,7 @@ if __name__ == "__main__":
             api.client.start(container=server_container.get('Id'))
         else:
             print "problem creating container"
+            sys.exit(2)
 
     if args.logs:
         print "docker logs -f", api.server_name
