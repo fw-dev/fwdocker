@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import argparse, sys, subprocess
+import argparse, sys, subprocess, os
 
 try:
     from docker import Client
+
     docker_available = True
 except ImportError:
     docker_available = False
@@ -12,16 +13,21 @@ if not docker_available:
     print "e.g: sudo pip install docker-py"
     sys.exit(1)
 
+
 class FileWaveDockerApi:
-    def __init__(self, version="11.0.2", docker_url='unix://var/run/docker.sock'):
-        self.version = version
+    def __init__(self, tag="latest", docker_url='unix://var/run/docker.sock'):
+        self.tag = tag
         self.client = Client(base_url=docker_url)
         self.data_volume_image = "johncclayton/fw-mdm-data-volume"
         self.data_volume_name = "fw-mdm-data-volume"
-        self.server_image = "johncclayton/fw-mdm-server"
-        self.server_name = "fw-mdm-server-" + self.version
+        self.server_image = "johncclayton/fw-mdm-server:" + self.tag
+        self.server_name = "fw-mdm-server"
         self.server_ports = []
         self.port_bindings = {}
+
+        fw_version = self.get_filewave_version_for_image(self.server_image)
+        if fw_version is not None:
+            self.server_name = "fw-mdm-server-" + fw_version
 
     def store_exposed_ports_for_image(self, name):
         image = self.find_image_named(name)
@@ -36,6 +42,20 @@ class FileWaveDockerApi:
             self.port_bindings = {x: x for x in self.server_ports}
             return True
         return False
+
+    def get_filewave_version_for_image(self, name):
+        image = self.find_image_named(name)
+        if not image:
+            return None
+        config = self.client.inspect_image(image)
+        if not config:
+            return None
+        if "Config" in config and "Env" in config["Config"]:
+            for var in config["Config"]["Env"]:
+                name, value = var.split("=")
+                if name == "FILEWAVE_VERSION":
+                    return value
+        return None
 
     def find_container_named(self, container_name):
         for c in self.client.containers(all=True, filters={'name': container_name}):
@@ -58,7 +78,7 @@ class FileWaveDockerApi:
             return None
 
         config = self.client.create_host_config(
-            cap_add=['ALL'], # not sure if this is required on centos:6.6, it is for 6.7 and 7.x series.
+            cap_add=['ALL'],  # not sure if this is required on centos:6.6, it is for 6.7 and 7.x series.
             privileged=True,
             port_bindings=self.port_bindings,
             publish_all_ports=True,
@@ -96,15 +116,23 @@ To run a shell within the FileWave container, do this on the terminal/cli:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--shell", help="outputs the required docker command to run a shell within the FileWave MDM Server and attached data volume", action="store_true")
-    parser.add_argument("--data", help="outputs the required docker command to run a shell which is mapped ONLY to the data-volume", action="store_true")
-    parser.add_argument("--logs", help="outputs the required docker command to tail the container logs", action="store_true")
-    parser.add_argument("--start", help="outputs the required docker command to start the container", action="store_true")
+    parser.add_argument("--shell",
+                        help="outputs the required docker command to run a shell within the FileWave MDM Server and attached data volume",
+                        action="store_true")
+    parser.add_argument("--data",
+                        help="outputs the required docker command to run a shell which is mapped ONLY to the data-volume",
+                        action="store_true")
+    parser.add_argument("--logs", help="outputs the required docker command to tail the container logs",
+                        action="store_true")
+    parser.add_argument("--start", help="outputs the required docker command to start the container",
+                        action="store_true")
     parser.add_argument("--stop", help="outputs the required docker command to stop the container", action="store_true")
 
     args = parser.parse_args()
 
-    api = FileWaveDockerApi()
+    # this is the version of the image to get - the code will still look in the image meta data to obtain
+    # the actual version so that this is what gets appended to the server container docker name
+    api = FileWaveDockerApi(tag=os.getenv("FILEWAVE_VERSION", "latest"))
 
     # always create the required data volume and create the runtime container as well.
     data_container = api.find_container_named(api.data_volume_name)
