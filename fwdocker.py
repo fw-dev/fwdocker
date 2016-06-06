@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-import argparse, sys, subprocess, os
+import argparse, sys, os, json
+
+# from operator import itemgetter, attrgetter, methodcaller
 
 try:
-    from docker import Client
+    from docker import Client, errors
 
     docker_available = True
 except ImportError:
@@ -13,14 +15,19 @@ if not docker_available:
     print "e.g: sudo pip install docker-py"
     sys.exit(1)
 
+FW_MDM_SERVER_IMAGE = "johncclayton/fw-mdm-server"
+FW_MDM_DATA_IMAGE = "johncclayton/fw-mdm-data-volume"
+
 
 class FileWaveDockerApi:
     def __init__(self, tag="latest", docker_url='unix://var/run/docker.sock'):
         self.tag = tag
         self.client = Client(base_url=docker_url)
-        self.data_volume_image = "johncclayton/fw-mdm-data-volume"
+        self.data_volume_image = FW_MDM_DATA_IMAGE
         self.data_volume_name = "fw-mdm-data-volume"
-        self.server_image = "johncclayton/fw-mdm-server:" + self.tag
+        self.server_image = FW_MDM_SERVER_IMAGE
+        if self.tag is not None:
+            self.server_image += ":" + self.tag
         self.server_name = "fw-mdm-server"
         self.server_ports = []
         self.port_bindings = {}
@@ -43,9 +50,8 @@ class FileWaveDockerApi:
             return True
         return False
 
-    def get_filewave_version_for_image(self, name):
-        image = self.find_image_named(name)
-        if not image:
+    def __get_filewave_version(self, image):
+        if image is None:
             return None
         config = self.client.inspect_image(image)
         if not config:
@@ -56,6 +62,9 @@ class FileWaveDockerApi:
                 if name == "FILEWAVE_VERSION":
                     return value
         return None
+
+    def get_filewave_version_for_image(self, name):
+        return self.__get_filewave_version(self.find_image_named(name))
 
     def find_container_named(self, container_name):
         for c in self.client.containers(all=True, filters={'name': container_name}):
@@ -70,8 +79,7 @@ class FileWaveDockerApi:
     def create_data_volume_container(self):
         return self.client.create_container(image=self.data_volume_image,
                                             name=self.data_volume_name,
-                                            command="/bin/true"
-                                            )
+                                            command="/bin/true")
 
     def create_server_container(self):
         if not self.store_exposed_ports_for_image(self.server_image):
@@ -130,37 +138,42 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # this is the version of the image to get - the code will still look in the image meta data to obtain
-    # the actual version so that this is what gets appended to the server container docker name
-    api = FileWaveDockerApi(tag=os.getenv("FILEWAVE_VERSION", "latest"))
+    try:
+        # this is the version of the image to get - the code will still look in the image meta data to obtain
+        # the actual version so that this is what gets appended to the server container docker name
+        api = FileWaveDockerApi(tag=os.getenv("FILEWAVE_VERSION", "latest"))
 
-    # always create the required data volume and create the runtime container as well.
-    data_container = api.find_container_named(api.data_volume_name)
-    if not data_container:
-        data_container = api.create_data_volume_container()
+        # find the data container we need.  if not pull it down.
+        data_container = api.find_container_named(api.data_volume_name)
+        if not data_container:
+            data_container = api.create_data_volume_container()
 
-    if not api.find_image_named(api.server_image):
-        print "cannot create server - image not found:", api.server_image
-        sys.exit(3)
-    else:
-        # does the container already exist, so that we can just start it?
-        server_container = api.find_container_named(api.server_name)
-        if not server_container:
-            server_container = api.create_server_container()
-
-        if server_container:
-            api.client.start(container=server_container.get('Id'))
+        if not api.find_image_named(api.server_image):
+            print "cannot create server - image not found:", api.server_image
+            sys.exit(3)
         else:
-            print "problem creating container"
-            sys.exit(2)
+            # does the container already exist, so that we can just start it?
+            server_container = api.find_container_named(api.server_name)
+            if not server_container:
+                server_container = api.create_server_container()
 
-    if args.logs:
-        print "docker logs -f", api.server_name
-    if args.shell:
-        print "docker exec -it", api.server_name, "/bin/bash"
-    if args.stop:
-        print "docker stop", api.server_name
-    if args.start:
-        print "docker start", api.server_name
-    if args.data:
-        print "docker run -it --rm --volumes-from", api.data_volume_name, " centos:6.6 /bin/bash"
+            if server_container:
+                api.client.start(container=server_container.get('Id'))
+            else:
+                print "problem creating container"
+                sys.exit(2)
+
+        if args.logs:
+            print "docker logs -f", api.server_name
+        if args.shell:
+            print "docker exec -it", api.server_name, "/bin/bash"
+        if args.stop:
+            print "docker stop", api.server_name
+        if args.start:
+            print "docker start", api.server_name
+        if args.data:
+            print "docker run -it --rm --volumes-from", api.data_volume_name, " centos:6.6 /bin/bash"
+
+    except errors.NotFound, e:
+        print "An image wasn't found - you will need to 'docker pull <name name>:<tag>'"
+        print e
