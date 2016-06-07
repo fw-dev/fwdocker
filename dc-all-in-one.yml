@@ -1,7 +1,6 @@
 version: '2'
 services:
   mdm_server:
-    image: johncclayton/fw-mdm-server:10.1.1
     networks:
       - mdm_net
     ports:
@@ -21,6 +20,7 @@ services:
       - 20030:20030
     volumes_from:
       - mdm_data
+    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
 
   mdm_data:
     image: johncclayton/fw-mdm-data-volume
