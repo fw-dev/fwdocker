@@ -18,7 +18,7 @@ By separating out the data from the runtime its easy to backup and upgrade your 
 # Getting Started
 To run FileWave, simply type this: 
 
-    # ./fwdocker.py
+    # ./fwdocker.py --init
     
 This will:
   1. create a data volume container if it doesn't already exist

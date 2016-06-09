@@ -40,7 +40,7 @@ if __name__ == "__main__":
     data_volume_name = "fw_mdm_data_1"
 
     if args.init:
-        print "docker-compose -f dc-all-in-one.yml -p fw up -d"
+        print "docker-compose -f dc-allin1-data-volume.yml -p fw up -d"
     if args.logs:
         print "docker logs -f", server_name
     if args.shell:
