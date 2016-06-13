@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse
+import argparse, os
 
 """
 This docker wrapper uses docker-compose to:
@@ -36,18 +36,20 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    fw_version=os.environ.get('FILEWAVE_VERSION', "11.0.2")
+    dc_file=os.environ.get('DC_FILE', 'dc-allin1-data-volume.yml')
     server_name = "fw_mdm_server_1"
     data_volume_name = "fw_mdm_data_1"
 
     if args.init:
-        print "docker-compose -f dc-allin1-data-volume.yml -p fw up -d"
+        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw up -d" % (fw_version, dc_file)
     if args.logs:
         print "docker logs -f", server_name
     if args.shell:
         print "docker exec -it", server_name, "/bin/bash"
     if args.stop:
-        print "docker-compose -f dc-all-in-one.yml -p fw stop"
+        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw stop" % (fw_version, dc_file)
     if args.start:
-        print "docker-compose -f dc-all-in-one.yml -p fw start"
+        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw start" % (fw_version, dc_file)
     if args.data:
         print "docker run -it --rm --volumes-from", data_volume_name, " centos:6.6 /bin/bash"

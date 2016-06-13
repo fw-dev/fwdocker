@@ -19,11 +19,13 @@ services:
       - 20445:20445
       - 20446:20446
       - 20030:20030
+
     volumes:
       - /fwxserver/Data Folder:/fwxserver/Data Folder
 
     volumes_from:
       - mdm_data
+
     image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
 
   mdm_data:
