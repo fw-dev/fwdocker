@@ -1,6 +1,8 @@
 version: '2'
 services:
   mdm_server:
+    container_name: "fw_mdm_server"
+
     networks:
       - mdm_net
 

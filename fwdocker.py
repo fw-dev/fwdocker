@@ -1,5 +1,13 @@
 #!/usr/bin/env python
-import argparse, os
+from subprocess import call
+from ConfigParser import SafeConfigParser
+import argparse, os, sys
+
+# for configparser values
+APP_SECTION = "APP"
+VAR_FILEWAVE_VERSION = "FILEWAVE_VERSION"
+VAR_FILEWAVE_DC_FILE = "FILEWAVE_DC_FILE"
+VAR_LAST_COMMAND = "LAST_COMMAND"
 
 """
 This docker wrapper uses docker-compose to:
@@ -17,39 +25,101 @@ To run a shell within the FileWave container, do this on the terminal/cli:
 
 """
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="A helper tool that makes using the FileWave Docker images easy.  You should" +
+                                     " cut/paste the output of fwdocker into your terminal to run the command.",
+                                     epilog="E.g. $(./fwdocker.py --init)")
 
     parser.add_argument("--init",
-                        help="outputs the command required to initialise an all-in-one FileWave MDM Server using docker-compose",
+                        help="Initialise an all-in-one FileWave MDM Server using docker-compose",
+                        action="store_true")
+    parser.add_argument("--nosave",
+                        help="dont store the runtime parameters, this is useful in testing or dev environments where you want to use multiple different containers",
                         action="store_true")
     parser.add_argument("--shell",
-                        help="outputs the required docker command to run a shell within the FileWave MDM Server and attached data volume",
+                        help="Run a shell within the FileWave MDM Server container",
                         action="store_true")
     parser.add_argument("--data",
-                        help="outputs the required docker command to run a shell which is mapped ONLY to the data-volume",
+                        help="Run a shell connected to the FileWave MDM data volume (not the MDM server container)",
                         action="store_true")
-    parser.add_argument("--logs", help="outputs the required docker command to tail the container logs",
+    parser.add_argument("--logs",
+                        help="Tail the logs for the FileWave MDM Server container",
                         action="store_true")
-    parser.add_argument("--start", help="outputs the required docker command to start the container",
+    parser.add_argument("--start",
+                        help="Starts the FileWave MDM Server container",
                         action="store_true")
-    parser.add_argument("--stop", help="outputs the required docker command to stop the container", action="store_true")
+    parser.add_argument("--stop",
+                        help="Stops the FileWave MDM Server container",
+                        action="store_true")
+    parser.add_argument("--info",
+                        help="Show the stored version and docker-compose information that is stored in the ~/.fwdocker.ini file",
+                        action="store_true")
 
     args = parser.parse_args()
 
-    fw_version=os.environ.get('FILEWAVE_VERSION', "11.0.2")
-    dc_file=os.environ.get('DC_FILE', 'dc-allin1-data-volume.yml')
-    server_name = "fw_mdm_server_1"
-    data_volume_name = "fw_mdm_data_1"
+    server_container_name = "fw_mdm_server"
+    data_volume_name = "fw_mdm_data"
 
+    if not args.init and not args.logs and not args.shell and not args.stop \
+        and not args.start and not args.data and not args.info:
+        print "Try using ./fwdocker --init to fire up your first FileWave container!"
+        sys.exit(1)
+
+    # find the users .fwdocker settings file, see if we can get the FILEWAVE_VERSION
+    # that is expected from there.  This will happen when the user does an --init
+    settings_path = os.path.expanduser("~/.fwdocker.ini")
+
+    # the config holds the version, which can always be overriden by the env var.
+    config = SafeConfigParser(defaults={
+        VAR_FILEWAVE_VERSION: "11.0.2",
+        VAR_FILEWAVE_DC_FILE: "dc-allin1-data-volume.yml"
+    })
+
+    if os.path.exists(settings_path):
+        config.read(settings_path)
+
+    if not config.has_section(APP_SECTION):
+        config.add_section(APP_SECTION)
+
+    # if environment vars are present, these override the configuration specified values
+    env_fw_version = os.environ.get('FILEWAVE_VERSION', None)
+    env_dc_file = os.environ.get('FILEWAVE_DC_FILE', None)
+    if env_fw_version is not None:
+        config.set(APP_SECTION, VAR_FILEWAVE_VERSION, env_fw_version)
+    if env_dc_file is not None:
+        config.set(APP_SECTION, VAR_FILEWAVE_DC_FILE, env_dc_file)
+
+    # create an environment var dict based on current values, and specify the
+    # FILEWAVE_VERSION from the configuration (or override).
+    env = dict(os.environ)
+    env[VAR_FILEWAVE_VERSION] = fw_version = config.get(APP_SECTION, VAR_FILEWAVE_VERSION)
+    env[VAR_FILEWAVE_DC_FILE] = dc_file = config.get(APP_SECTION, VAR_FILEWAVE_DC_FILE)
+
+    if args.info:
+        print "fwdocker.py Settings"
+        print "===================="
+        print VAR_FILEWAVE_VERSION, ":", env[VAR_FILEWAVE_VERSION]
+        print VAR_FILEWAVE_DC_FILE, ":", env[VAR_FILEWAVE_DC_FILE]
+        print VAR_LAST_COMMAND, ":", config.get(APP_SECTION, VAR_LAST_COMMAND)
+        sys.exit(6)
+
+    p = None
     if args.init:
-        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw up -d" % (fw_version, dc_file)
+        p = "docker-compose -f %s -p fw up -d" % (dc_file,)
     if args.logs:
-        print "docker logs -f", server_name
+        p = "docker logs -f %s" % (server_container_name,)
     if args.shell:
-        print "docker exec -it", server_name, "/bin/bash"
+        p = "docker exec -it %s /bin/bash" % (server_container_name,)
     if args.stop:
-        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw stop" % (fw_version, dc_file)
+        p = "docker-compose -f %s -p fw stop" % (dc_file,)
     if args.start:
-        print "FILEWAVE_VERSION=%s docker-compose -f %s -p fw start" % (fw_version, dc_file)
+        p = "docker-compose -f %s -p fw start" % (dc_file,)
     if args.data:
-        print "docker run -it --rm --volumes-from", data_volume_name, " centos:6.6 /bin/bash"
+        p = "docker run -it --rm --volumes-from %s centos:6.6 /bin/bash" % (data_volume_name,)
+
+    config.set(APP_SECTION, VAR_LAST_COMMAND, str(p))
+    with open(settings_path, 'w') as w:
+        config.write(w)
+
+    if p:
+        print "Command:", p
+        call(p.split(), env=env)
