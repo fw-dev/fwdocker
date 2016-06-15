@@ -99,8 +99,8 @@ if __name__ == "__main__":
     env[VAR_FILEWAVE_DC_FILE] = dc_file = config.get(APP_SECTION, VAR_FILEWAVE_DC_FILE)
 
     if args.info:
-        print "fwdocker.py Info"
-        print "================"
+        print "fwdocker.py Ini/Settings Info"
+        print "============================="
         print VAR_FILEWAVE_VERSION, ":", env[VAR_FILEWAVE_VERSION]
         print VAR_FILEWAVE_DC_FILE, ":", env[VAR_FILEWAVE_DC_FILE]
         print VAR_LAST_COMMAND, ":", config.get(APP_SECTION, VAR_LAST_COMMAND)
