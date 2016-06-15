@@ -24,6 +24,8 @@ services:
     volumes:
       - /fwxserver/Data Folder:/fwxserver/Data Folder
 
+    restart: unless-stopped
+
     volumes_from:
       - mdm_data
 

@@ -6,6 +6,8 @@ services:
     networks:
       - mdm_net
 
+    restart: unless-stopped
+
     ports:
       - 2195:2195
       - 5223:5223
