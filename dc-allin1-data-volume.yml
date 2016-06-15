@@ -1,6 +1,7 @@
 version: '2'
 services:
   mdm_server:
+    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
     container_name: "fw_mdm_server"
     networks:
       - mdm_net
@@ -21,19 +22,14 @@ services:
       - 20446:20446
       - 20030:20030
 
-    volumes:
-      - /fwxserver/Data Folder:/fwxserver/Data Folder
-
     restart: unless-stopped
 
     volumes_from:
       - mdm_data
 
-    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
-
   mdm_data:
-    container_name: "fw_mdm_data"
     image: johncclayton/fw-mdm-data-volume
+    container_name: "fw_mdm_data"
     networks:
       - mdm_net
 
