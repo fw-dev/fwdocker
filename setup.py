@@ -25,4 +25,5 @@ setup(
   download_url = 'https://github.com/johncclayton/fwdocker/tarball/0.1', # I'll explain this in a second
   keywords = ['filewave', 'docker', 'mdm', 'distribution'], # arbitrary keywords
   classifiers = [],
+  install_requires=[ 'docker-py' ]
 )
