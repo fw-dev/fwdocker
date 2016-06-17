@@ -1,0 +1,45 @@
+version: '2'
+services:
+  mdm_server:
+    container_name: "fw_mdm_server"
+
+    networks:
+      - mdm_net
+
+    restart: unless-stopped
+    ports:
+      - 2195:2195
+      - 5223:5223
+      - 19995:19995
+      - 19996:19996
+      - 20005:20005
+      - 20006:20006
+      - 20010:20010
+      - 20015:20015
+      - 20016:20016
+      - 20017:20017
+      - 20443:20443
+      - 20445:20445
+      - 20446:20446
+      - 20030:20030
+
+    volumes:
+      - ./data/fwxserver:/fwxserver
+      - ./data/usr/local/filewave:/usr/local/filewave
+      - ./data/usr/local/filewave/apache/conf:/usr/local/filewave/apache/conf
+      - ./data/usr/local/filewave/apache/logs:/usr/local/filewave/apache/logs
+      - ./data/usr/local/filewave/apache/passwords:/usr/local/filewave/apache/passwords
+      - ./data/usr/local/filewave/certs:/usr/local/filewave/certs
+      - ./data/usr/local/filewave/fwcld:/usr/local/filewave/fwcld
+      - ./data/usr/local/filewave/ipa:/usr/local/filewave/ipa
+      - ./data/usr/local/filewave/log:/usr/local/filewave/log
+      - ./data/usr/local/filewave/media:/usr/local/filewave/media
+      - ./data/usr/local/filewave/postgres/conf:/usr/local/filewave/postgres/conf
+      - ./data/usr/local/filewave/postgres/log:/usr/local/filewave/postgres/log
+      - ./data/usr/local/filewave/scripts:/usr/local/filewave/scripts
+
+    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
+
+networks:
+  mdm_net:
+  

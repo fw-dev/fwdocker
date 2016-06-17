@@ -1,0 +1,38 @@
+version: '2'
+services:
+  mdm_server:
+    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
+    container_name: "fw_mdm_server"
+    networks:
+      - mdm_net
+
+    ports:
+      - 2195:2195
+      - 5223:5223
+      - 19995:19995
+      - 19996:19996
+      - 20005:20005
+      - 20006:20006
+      - 20010:20010
+      - 20015:20015
+      - 20016:20016
+      - 20017:20017
+      - 20443:20443
+      - 20445:20445
+      - 20446:20446
+      - 20030:20030
+
+    restart: unless-stopped
+
+    volumes_from:
+      - mdm_data
+
+  mdm_data:
+    image: johncclayton/fw-mdm-data-volume
+    container_name: "fw_mdm_data"
+    networks:
+      - mdm_net
+
+networks:
+  mdm_net:
+  
