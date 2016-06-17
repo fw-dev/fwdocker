@@ -1,8 +1,23 @@
+# -*- coding: utf-8 -*-
 from distutils.core import setup
+
+import re
+from setuptools import setup
+
+version = re.search(
+  '^__version__\s*=\s*"(.*)"',
+  open('fwdocker/fwdocker.py').read(),
+  re.M
+).group(1)
+
+
 setup(
   name = 'fwdocker',
   packages = ['fwdocker'], # this must be the same as the name above
-  version = '0.1',
+  version = version,
+  entry_points = {
+    "console_scripts": ['fwdocker = fwdocker.fwdocker:main']
+  },
   description = 'A wrapper/utility to make it easy to use FileWave with Docker',
   author = 'John Clayton',
   author_email = 'johnc@filewave.com',
