@@ -25,5 +25,10 @@ setup(
   download_url = 'https://github.com/johncclayton/fwdocker/tarball/0.1', # I'll explain this in a second
   keywords = ['filewave', 'docker', 'mdm', 'distribution'], # arbitrary keywords
   classifiers = [],
-  install_requires=[ 'docker-py' ]
+  license="Apache",
+  package_data= {
+    # bring in the docker-compose example yml files.
+    '': ['*.yml']
+  },
+  install_requires=[ 'docker-py>=1.8' ]
 )

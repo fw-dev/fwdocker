@@ -1,3 +1,6 @@
 data
 *.pyc
 dist
+fwdocker.egg-info
+vomp
+build
