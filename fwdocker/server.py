@@ -144,7 +144,7 @@ def script_main(args=None):
 
     p = None
     if args.version:
-        p = "docker exec -it %s /usr/local/sbin/fwxserver -V" % (server_container_name,)
+        p = "docker exec %s /usr/local/sbin/fwxserver -V" % (server_container_name,)
     if args.init:
         print "Initializing a FileWave Server, version:", param.env[VAR_FILEWAVE_VERSION]
         print "Tip: use fwdocker --logs, to monitor the logs of the new container called: %s" % (server_container_name)

@@ -1,19 +1,17 @@
 version: '2'
 services:
   mdm_server:
-    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
-    container_name: "fw_mdm_server"
     networks:
       - mdm_net
 
     ports:
       - 2195:2195
+      - 9432:9432
       - 5223:5223
       - 19995:19995
       - 19996:19996
       - 20005:20005
       - 20006:20006
-      - 20010:20010
       - 20015:20015
       - 20016:20016
       - 20017:20017

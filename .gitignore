@@ -4,3 +4,5 @@ dist
 fwdocker.egg-info
 vomp
 build
+MANIFEST
+.idea
