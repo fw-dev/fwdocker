@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 from subprocess import call
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoOptionError
 import argparse, os, sys
-from docker import Client
 
 from pkg_resources import resource_filename
 
@@ -40,7 +39,6 @@ class ParamBuilder:
     def __init__(self, settings_path, docker_url='unix://var/run/docker.sock'):
         self.env = dict(os.environ)
         self.settings_path = settings_path
-        # self.client = Client(docker_url)
 
         # the config holds the version, which can always be overriden by the env var.
         self.config = SafeConfigParser(defaults={
@@ -91,7 +89,7 @@ def script_main(args=None):
 
     parser.add_argument("--init",
                         help="Initialise an all-in-one FileWave MDM Server using docker-compose - you must specify the version of FileWave that you want to have initialised",
-                        type=str, default="11.2.1", dest="version", nargs="?")
+                        type=str, default="11.2.1", nargs="?")
     parser.add_argument("--nosave",
                         help="dont store the runtime parameters, this is useful in testing or dev environments where you want to use multiple different container versions",
                         action="store_true")
@@ -119,12 +117,9 @@ def script_main(args=None):
 
     args = parser.parse_args(args=args)
 
-    server_container_name = "fw_mdm_server"
-    data_volume_name = "fw_mdm_data"
-
-    if not args.version and not args.logs and not args.shell and not args.stop \
+    if not args.init and not args.logs and not args.shell and not args.stop \
         and not args.start and not args.info and not args.data and not args.version:
-        print "Use ./fwdocker --init <version> to fire up your first FileWave container, or --help for more information"
+        print("Use ./fwdocker --init <version> to fire up your first FileWave container, or --help for more information")
         sys.exit(1)
 
     # find the users .fwdocker settings file, see if we can get the FILEWAVE_VERSION
@@ -139,24 +134,31 @@ def script_main(args=None):
         print VAR_FILEWAVE_DC_FILE, ":", param.env[VAR_FILEWAVE_DC_FILE]
         print VAR_FILEWAVE_REPO_SERVER, ":", param.env[VAR_FILEWAVE_REPO_SERVER]
         print VAR_FILEWAVE_REPO_DATA, ":", param.env[VAR_FILEWAVE_REPO_DATA]
-        print VAR_LAST_COMMAND, ":", param.config.get(APP_SECTION, VAR_LAST_COMMAND)
+
+        try:
+            lc = param.config.get(APP_SECTION, VAR_LAST_COMMAND)
+            print VAR_LAST_COMMAND, ":", lc if lc is not None else "<None>"
+        except NoOptionError:
+            pass
+
         sys.exit(6)
 
     # the --init value overrides the version, always.
-    if args.version:
-        param.env[VAR_FILEWAVE_VERSION] = args.version
+    if args.init:
+        param.env[VAR_FILEWAVE_VERSION] = args.init
 
-    # write env vars into .env of current directory
-    # enf_file = open(".env", "w")
-    # for key, value in param.env.iteritems():
-    #     if key.startswith("FILEWAVE"):
-    #         enf_file.write("%s=%s\r\n" %(key, value))
-    # enf_file.close()
+    server_container_name = "fw_mdm_server_%s" % (param.env[VAR_FILEWAVE_VERSION])
+    data_volume_name = "fw_mdm_data"
+
+    print("The docker compose file is at: ", param.env[VAR_FILEWAVE_DC_FILE])
+    if not os.path.exists(param.env[VAR_FILEWAVE_DC_FILE]):
+        print("Whoa - can't find that file!")
+        sys.exit(2)
 
     p = None
     if args.version:
         p = "docker exec %s /usr/local/sbin/fwxserver -V" % (server_container_name,)
-    if args.version:
+    if args.init:
         print "Initializing a FileWave Server, version:", param.env[VAR_FILEWAVE_VERSION]
         print "Tip: use fwdocker --logs, to monitor the logs of the new container called: %s" % (server_container_name)
         p = "docker-compose -f %s -p fw up -d" % (param.env[VAR_FILEWAVE_DC_FILE],)
