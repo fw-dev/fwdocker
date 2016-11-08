@@ -38,7 +38,7 @@ services:
       - ./data/usr/local/filewave/postgres/log:/usr/local/filewave/postgres/log
       - ./data/usr/local/filewave/scripts:/usr/local/filewave/scripts
 
-    image: johncclayton/fw-mdm-server:${FILEWAVE_VERSION}
+    image: filewave/fw-mdm-server:${FILEWAVE_VERSION}
 
 networks:
   mdm_net:

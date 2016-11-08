@@ -17,17 +17,17 @@ VAR_FILEWAVE_REPO_DATA = "FILEWAVE_REPO_DATA"
 
 VAR_LAST_COMMAND = "LAST_COMMAND"
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 """
 This docker wrapper uses docker-compose to:
-    - make a data volume to store the postgres data, configuration and log files
+    - make a data volume to store the server data, configuration and log files
     - make a runtime FileWave MDM container and attach it to the data volume container
 
 This package installs the fwdocker command.
 
-The command makes it easier to work with the FileWave MDM Server within Docker,
-providing commands to bootstrap the containers as well as get access to them via shell.
+The command makes it easier to work with the FileWave MDM Server,
+providing commands to bootstrap the data/runtime containers as well as get access to them via shell.
 
 To kick off an all-in-one container for FileWave MDM, do this:
     # fwdocker --init
@@ -44,10 +44,10 @@ class ParamBuilder:
 
         # the config holds the version, which can always be overriden by the env var.
         self.config = SafeConfigParser(defaults={
-            VAR_FILEWAVE_VERSION: "11.0.2",
+            VAR_FILEWAVE_VERSION: "11.2.1",
             VAR_FILEWAVE_DC_FILE: "dc-allin1-data-volume.yml",
-            VAR_FILEWAVE_REPO_SERVER: "johncclayton/fw-mdm-server",
-            VAR_FILEWAVE_REPO_DATA: "johncclayton/fw-mdm-data"
+            VAR_FILEWAVE_REPO_SERVER: "filewave/fw-mdm-server",
+            VAR_FILEWAVE_REPO_DATA: "filewave/fw-mdm-data"
         })
 
         if os.path.exists(settings_path):
@@ -87,11 +87,11 @@ class ParamBuilder:
 def script_main(args=None):
     parser = argparse.ArgumentParser(description="A helper tool that makes using the FileWave Docker images easy.  You should" +
                                      " cut/paste the output of fwdocker into your terminal to run the command.",
-                                     epilog="E.g. $(./fwdocker.py --init)")
+                                     epilog="E.g. $(./fwdocker.py --init <version, e.g. 11.2.1>)")
 
     parser.add_argument("--init",
-                        help="Initialise an all-in-one FileWave MDM Server using docker-compose",
-                        action="store_true")
+                        help="Initialise an all-in-one FileWave MDM Server using docker-compose - you must specify the version of FileWave that you want to have initialised",
+                        type=str, default="11.2.1", dest="version", nargs="?")
     parser.add_argument("--nosave",
                         help="dont store the runtime parameters, this is useful in testing or dev environments where you want to use multiple different container versions",
                         action="store_true")
@@ -102,7 +102,7 @@ def script_main(args=None):
                         help="Run a shell within the FileWave MDM Server data container",
                         action="store_true")
     parser.add_argument("--version",
-                        help="Print the FileWave MDM Server version to the console, note: this requires the container to be running",
+                        help="Prints the FileWave MDM Server version to the console, note: this requires the container to be running",
                         action="store_true")
     parser.add_argument("--logs",
                         help="Tail the logs for the FileWave MDM Server container",
@@ -122,13 +122,13 @@ def script_main(args=None):
     server_container_name = "fw_mdm_server"
     data_volume_name = "fw_mdm_data"
 
-    if not args.init and not args.logs and not args.shell and not args.stop \
+    if not args.version and not args.logs and not args.shell and not args.stop \
         and not args.start and not args.info and not args.data and not args.version:
-        print "Use ./fwdocker --init to fire up your first FileWave container, or --help for more information"
+        print "Use ./fwdocker --init <version> to fire up your first FileWave container, or --help for more information"
         sys.exit(1)
 
     # find the users .fwdocker settings file, see if we can get the FILEWAVE_VERSION
-    # that is expected from there.  This will happen when the user does an --init
+    # that is expected from there.
     settings_path = os.path.expanduser("~/.fwdocker.ini")
     param = ParamBuilder(settings_path)
 
@@ -142,10 +142,21 @@ def script_main(args=None):
         print VAR_LAST_COMMAND, ":", param.config.get(APP_SECTION, VAR_LAST_COMMAND)
         sys.exit(6)
 
+    # the --init value overrides the version, always.
+    if args.version:
+        param.env[VAR_FILEWAVE_VERSION] = args.version
+
+    # write env vars into .env of current directory
+    # enf_file = open(".env", "w")
+    # for key, value in param.env.iteritems():
+    #     if key.startswith("FILEWAVE"):
+    #         enf_file.write("%s=%s\r\n" %(key, value))
+    # enf_file.close()
+
     p = None
     if args.version:
         p = "docker exec %s /usr/local/sbin/fwxserver -V" % (server_container_name,)
-    if args.init:
+    if args.version:
         print "Initializing a FileWave Server, version:", param.env[VAR_FILEWAVE_VERSION]
         print "Tip: use fwdocker --logs, to monitor the logs of the new container called: %s" % (server_container_name)
         p = "docker-compose -f %s -p fw up -d" % (param.env[VAR_FILEWAVE_DC_FILE],)
@@ -167,4 +178,4 @@ def script_main(args=None):
             param.config.write(w)
 
     if p:
-        call(p.split(), env=param.env)
+        call(p.split(), cwd=os.getcwd(), env=param.env)

@@ -1,6 +1,8 @@
 version: '2'
 services:
   mdm_server:
+    image: filewave/fw-mdm-server:${FILEWAVE_VERSION}
+    container_name: "fw_mdm_server_${FILEWAVE_VERSION}"
     networks:
       - mdm_net
 
@@ -26,7 +28,7 @@ services:
       - mdm_data
 
   mdm_data:
-    image: johncclayton/fw-mdm-data-volume
+    image: filewave/fw-mdm-data-volume:${FILEWAVE_VERSION}
     container_name: "fw_mdm_data"
     networks:
       - mdm_net

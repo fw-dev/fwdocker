@@ -8,7 +8,7 @@ The program provides the ability to:
  4. use basic commands on the service such as start / stop 
  5. obtain logging information
  
-FileWave MDM is split into two parts - a data container, and a runtime container.  The data container holds the 
+FileWave MDM is split into two parts - a data container, and a runtime container.  The data container holds the
 configuration, database, certificates and logs etc.  The data container is what is used to back up a FileWave installation. 
 
 The runtime container holds all the binaries for a particular version of FileWave, and attaches to the data container.  
@@ -18,7 +18,7 @@ By separating out the data from the runtime its easy to backup and upgrade your 
 # Getting Started
 To run FileWave, simply type this: 
 
-    # ./fwdocker.py --init
+    # ./fwdocker.py --init <filewave version, default is "11.2.1">
     
 This will:
   1. create a data volume container if it doesn't already exist
@@ -45,4 +45,21 @@ Use fwdocker.py to spawn a shell attached to the data volume - in this instance 
 Use fwdocker.py to spawn a shell attached to the FileWave MDM Server:
 
     # $(./fwdocker.py --shell)
+
+
+## Publishing the package to PyPi
+Please check the following link for more information: http://peterdowns.com/posts/first-time-with-pypi.html
+
+If you want to publish a new version, remember to increment the version in fwdocker/fwdocker.py - otherwise
+the sdist upload command will fail.
+
+To publish, do the following two steps with any python interpreter:
+
+  $ python setup.py build
+  $ python setup.py sdist upload -r pypitest
+
+When the world is in order and things work, e.g. you have checked out that the code works on the staging PyPi services
+available here https://testpypi.python.org/pypi, then you can publish to the world at large:
+
+  $ python setup.py sdist upload pypi
 
