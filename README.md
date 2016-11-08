@@ -55,11 +55,12 @@ the sdist upload command will fail.
 
 To publish, do the following two steps with any python interpreter:
 
-  $ python setup.py build
-  $ python setup.py sdist upload -r pypitest
+    $ python setup.py build
+    $ python setup.py sdist upload -r pypitest
 
 When the world is in order and things work, e.g. you have checked out that the code works on the staging PyPi services
 available here https://testpypi.python.org/pypi, then you can publish to the world at large:
 
-  $ python setup.py sdist upload pypi
+    $ python setup.py sdist upload -r pypi
+
 
