@@ -9,5 +9,6 @@ if [ ! -f $LINUX_ZIPFILE_NAME ]; then
     exit 2
 else
     docker build -t filewave/mdm-server:${FILEWAVE_VERSION} .
+    # docker push filewave/mdm-server:11.2.2
 fi
 
