@@ -42,7 +42,7 @@ class ParamBuilder:
 
         # the config holds the version, which can always be overriden by the env var.
         self.config = SafeConfigParser(defaults={
-            VAR_FILEWAVE_VERSION: "11.2.1",
+            VAR_FILEWAVE_VERSION: "11.2.2",
             VAR_FILEWAVE_DC_FILE: "dc-allin1-data-volume.yml",
             VAR_FILEWAVE_REPO_SERVER: "filewave/fw-mdm-server",
             VAR_FILEWAVE_REPO_DATA: "filewave/fw-mdm-data"
@@ -89,7 +89,7 @@ def script_main(args=None):
 
     parser.add_argument("--init",
                         help="Initialise an all-in-one FileWave MDM Server using docker-compose - you must specify the version of FileWave that you want to have initialised",
-                        type=str, default="11.2.1", nargs="?")
+                        type=str, default="11.2.2", nargs="?")
     parser.add_argument("--nosave",
                         help="dont store the runtime parameters, this is useful in testing or dev environments where you want to use multiple different container versions",
                         action="store_true")

@@ -1,0 +1,36 @@
+version: '2'
+
+#
+# using docker-compose for dev only - UCS can't make use of this.  However, it makes
+# exposing the right ports easier because you don't have to type a huge command line,
+# and we can also map volumes here as well.
+#
+services:
+  mdm_server:
+    image: filewave/mdm-server:11.2.2
+    container_name: "ucs_server_11.2.2"
+
+    ports:
+      - 2195:2195
+      - 5223:5223
+      - 9432:9432
+      - 19995:19995
+      - 19996:19996
+      - 20005:20005
+      - 20006:20006
+      - 20015:20015
+      - 20016:20016
+      - 20017:20017
+      - 20443:20443
+      - 20445:20445
+      - 20446:20446
+      - 20030:20030
+
+    restart: unless-stopped
+
+    networks:
+      - fw_mdm_net
+
+
+networks:
+  fw_mdm_net:

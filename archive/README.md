@@ -18,7 +18,7 @@ By separating out the data from the runtime its easy to backup and upgrade your 
 # Getting Started
 To run FileWave, simply type this: 
 
-    # ./fwdocker.py --init <filewave version, default is "11.2.1">
+    # ./fwdocker.py --init <filewave version, default is "11.2.2">
     
 This will:
   1. create a data volume container if it doesn't already exist
