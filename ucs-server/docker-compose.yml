@@ -7,8 +7,8 @@ version: '2'
 #
 services:
   mdm_server:
-    image: filewave/mdm-server:11.2.2
-    container_name: "ucs_server_11.2.2"
+    image: filewave/mdm-server:11.2.3
+    container_name: "ucs_server_11.2.3"
 
     ports:
       - 2195:2195
@@ -30,7 +30,6 @@ services:
 
     networks:
       - fw_mdm_net
-
 
 networks:
   fw_mdm_net:

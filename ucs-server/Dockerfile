@@ -2,7 +2,7 @@ FROM centos:6.6
 MAINTAINER support@filewave.com
 
 ARG FILEWAVE_VERSION
-ENV FILEWAVE_VERSION ${FILEWAVE_VERSION:-11.2.2}
+ENV FILEWAVE_VERSION ${FILEWAVE_VERSION:-11.2.3}
 
 ENV LINUX_ZIPFILE_NAME=FileWave_Linux_${FILEWAVE_VERSION}.zip
 
@@ -18,23 +18,25 @@ COPY "${LINUX_ZIPFILE_NAME}" "${INSTALL_DIR}/"
 
 RUN yum -y install unzip
 
-RUN cd /install && unzip -o "${LINUX_ZIPFILE_NAME}" && yum install -y --nogpgcheck "$RPM_FW_SERVER.rpm" \
-  && cd / && rm -rf /install/*
+WORKDIR "${INSTALL_DIR}"
+RUN unzip -o "${LINUX_ZIPFILE_NAME}" && yum install -y --nogpgcheck "$RPM_FW_SERVER.rpm"
 
-COPY docker-entrypoint.sh ${INSTALL_DIR}/docker-entrypoint.sh
+# extract pre/post install/uninstall scripts
+RUN rpm -qp --scripts "$RPM_FW_SERVER.rpm" | awk '/[preinstall|postinstall|preuninstall|postuninstall] scriptlet.*:/{x="F"++i;next;}{print > x;}' -
+RUN mv F1 preinstall.sh && mv F2 postinstall.sh && mv F3 preuninstall.sh && mv F4 postuninstall.sh && chmod +x p*.sh
+RUN cd / && rm -rf /install/*.rpm && rm -rf /install/*.zip
 
 # stop the supervisord process ...
 RUN /etc/init.d/fw-server stop
 
+RUN cp -r /fwxserver/DB/pg_data /usr/local/filewave/tmp/pg_data
+RUN cp -r /usr/local/filewave/certs /usr/local/filewave/tmp/certs
+
 # NOTE: /fwxserver/DB/pg_data is NOT exposed as a volume as the current design calls for the data
 # to be present within the container, only on export/import is it leaving the confines of its docker container.
-VOLUME [ "/fwxserver", "/fwxserver/Data Folder" ]
+#
+# NOTE: grouping directories reduces the number of layers in the final image (a good thing)
+VOLUME [ "/fwxserver", "/fwxserver/Data Folder", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld", "/usr/local/filewave/django" ]
+VOLUME [ "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/postgresql/conf", "/usr/local/filewave/postgresql/log", "/usr/local/filewave/tmp", "/usr/local/filewave/scripts" ]
 
-VOLUME [ "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords" ]
-VOLUME [ "/usr/local/filewave/certs", "/usr/local/filewave/fwcld", "/usr/local/filewave/django" ]
-
-VOLUME [ "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/postgresql/conf" ]
-VOLUME [ "/usr/local/filewave/postgresql/log", "/usr/local/filewave/tmp", "/usr/local/filewave/scripts" ]
-
-CMD [ "/usr/local/filewave/python.v27/bin/supervisord", "-n", "-c", "/usr/local/etc/filewave/supervisor/supervisord-server.conf" ]
-
+CMD [ "docker-entrypoint.sh" ]
