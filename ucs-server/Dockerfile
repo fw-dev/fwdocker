@@ -33,11 +33,9 @@ RUN cp -r /fwxserver/DB \
     /usr/local/filewave/apache/conf \
     /usr/local/filewave/tmp/
 
-# NOTE: /fwxserver/DB/pg_data is NOT exposed as a volume as the current design calls for the data
-# to be present within the container, only on export/import is it leaving the confines of its docker container.
-#
 # NOTE: grouping directories reduces the number of layers in the final image (a good thing)
-VOLUME [ "/fwxserver", "/fwxserver/Data Folder", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld", "/usr/local/filewave/django" ]
-VOLUME [ "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/postgresql/conf", "/usr/local/filewave/postgresql/log", "/usr/local/filewave/tmp", "/usr/local/filewave/scripts" ]
+VOLUME [ "/fwxserver/DB", "/fwxserver/Data Folder", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld",  "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media"]
 
-CMD [ "docker-entrypoint.sh" ]
+COPY ./docker-entrypoint.sh /
+
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
