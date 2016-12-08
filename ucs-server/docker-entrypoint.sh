@@ -6,6 +6,8 @@ TEMP_DIR="/usr/local/filewave/tmp"
 if [ ! "$(ls -A /fwxserver/DB)" ]; then
     echo $"Restoring DB folder"
     cp -r $TEMP_DIR/DB /fwxserver/
+
+    chown -R postgres:wheel /fwxserver/DB/pg_data
 fi
 
 DATA_FOLDER="Data Folder"

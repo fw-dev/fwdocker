@@ -23,10 +23,10 @@ services:
       - "20015:20015"
       - "20016:20016"
       - "20017:20017"
+      - "20030:20030"
       - "20443:20443"
       - "20445:20445"
       - "20446:20446"
-      - "20030:20030"
 
     volumes:
       - /tmp/docker-test/apache_conf:/usr/local/filewave/apache/conf
