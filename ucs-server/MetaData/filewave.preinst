@@ -1,0 +1,7 @@
+#! /bin/bash
+
+FQDN="$(ucr get hostname).$(ucr get domainname)"
+
+ucr set appcenter/apps/filewave/docker/params="--add-host ${FQDN}:127.0.0.1"
+
+exit 0
