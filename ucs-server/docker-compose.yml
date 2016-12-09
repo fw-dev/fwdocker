@@ -12,8 +12,7 @@ services:
       args:
         FILEWAVE_VERSION: 11.2.4
 
-    hostname: ${HOSTNAME}
-    domainname: ${DOMAINNAME}
+    hostname: ${CONTAINER_HOSTNAME}
 
     ports:
       - "19995:19995"
@@ -39,5 +38,7 @@ services:
       - /tmp/docker-test/filewave_ipa:/usr/local/filewave/ipa
       - /tmp/docker-test/filewave_media:/usr/local/filewave/media
       - /tmp/docker-test/filewave_log:/usr/local/filewave/log
+      - /tmp/docker-test/filewave_tmp:/usr/local/filewave/tmp
+      - /tmp/docker-test/server_log:/private/var/log
        
     restart: unless-stopped

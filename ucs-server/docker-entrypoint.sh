@@ -2,7 +2,7 @@
 
 echo $"Entry point"
 
-TEMP_DIR="/usr/local/filewave/tmp"
+TEMP_DIR="/tmp/filewave"
 if [ ! "$(ls -A /fwxserver/DB)" ]; then
     echo $"Restoring DB folder"
     cp -r $TEMP_DIR/DB /fwxserver/
