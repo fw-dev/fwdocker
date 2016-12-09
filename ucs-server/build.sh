@@ -8,7 +8,6 @@ if [ ! -f $LINUX_ZIPFILE_NAME ]; then
     echo Linux ZIP Filename: $LINUX_ZIPFILE_NAME
     exit 2
 else
-    docker build -t filewave/mdm-server:${FILEWAVE_VERSION} .
-    # docker push filewave/mdm-server:${FILEWAVE_VERSION}
+    docker build -t filewave/ucsserver:${FILEWAVE_VERSION} --build-arg FILEWAVE_VERSION=${FILEWAVE_VERSION} .
 fi
 

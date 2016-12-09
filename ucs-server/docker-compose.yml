@@ -1,16 +1,11 @@
 version: '2'
 
-#
-# using docker-compose for dev only - UCS can't make use of this.  However, it makes
-# exposing the right ports easier because you don't have to type a huge command line,
-# and we can also map volumes here as well.
-#
 services:
   mdm_server:
     build: 
       context: .
       args:
-        FILEWAVE_VERSION: 11.2.4
+        FILEWAVE_VERSION: ${FILEWAVE_VERSION}
 
     hostname: ${CONTAINER_HOSTNAME}
 
