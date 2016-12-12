@@ -7,7 +7,8 @@ services:
       args:
         FILEWAVE_VERSION: ${FILEWAVE_VERSION}
 
-    hostname: ${CONTAINER_HOSTNAME}
+    extra_hosts:
+      - "${MDM_HOSTNAME}:127.0.0.1"
 
     ports:
       - "19995:19995"
