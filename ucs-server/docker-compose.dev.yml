@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  mdm_server:
+    image: filewave/ucsserver:${FILEWAVE_VERSION}
+
+    extra_hosts:
+      - "${MDM_HOSTNAME}:127.0.0.1"
+
+    ports:
+      - "19995:19995"
+      - "19996:19996"
+      - "20005:20005"
+      - "20006:20006"
+      - "20015:20015"
+      - "20016:20016"
+      - "20017:20017"
+      - "20030:20030"
+      - "20443:20443"
+      - "20445:20445"
+      - "20446:20446"
+
+    volumes:
+      - /tmp/docker-test/apache_conf:/usr/local/filewave/apache/conf
+      - /tmp/docker-test/apache_logs:/usr/local/filewave/apache/logs
+      - /tmp/docker-test/apache_passwords:/usr/local/filewave/apache/passwords
+      - /tmp/docker-test/db_folder:/fwxserver/DB
+      - /tmp/docker-test/data_folder:/fwxserver/Data Folder
+      - /tmp/docker-test/filewave_certs:/usr/local/filewave/certs
+      - /tmp/docker-test/filewave_fwcld:/usr/local/filewave/fwcld
+      - /tmp/docker-test/filewave_ipa:/usr/local/filewave/ipa
+      - /tmp/docker-test/filewave_media:/usr/local/filewave/media
+      - /tmp/docker-test/filewave_log:/usr/local/filewave/log
+      - /tmp/docker-test/filewave_tmp:/usr/local/filewave/tmp
+      - /tmp/docker-test/server_log:/private/var/log
+       
+    restart: unless-stopped
