@@ -1,4 +1,4 @@
-FROM centos:6.6
+FROM centos:6.8
 MAINTAINER support@filewave.com
 
 ARG FILEWAVE_VERSION
@@ -37,7 +37,7 @@ RUN cp -r /fwxserver/DB \
 
 RUN cp -r /usr/local/filewave/postgresql/conf \
     /tmp/filewave/postgres_conf
-    
+
 # NOTE: grouping directories reduces the number of layers in the final image (a good thing)
 VOLUME [ "/fwxserver/DB", "/fwxserver/Data Folder", "/usr/local/filewave/postgresql/conf", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld",  "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/tmp/"]
 

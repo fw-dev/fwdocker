@@ -1,6 +1,27 @@
 #! /bin/bash
 
-echo $"Entry point"
+SUPERVISORCTL='/usr/local/filewave/python.v27/bin/supervisorctl -c /usr/local/etc/filewave/supervisor/supervisord-server.conf'
+
+# SIGTERM-handler
+term_handler() {
+  pid=$($SUPERVISORCTL pid)
+  if [ $pid -ne 0 ]; then
+    echo "Stopping all processes..."
+    $SUPERVISORCTL stop all
+
+    echo "Stopping supervisord..."
+    kill -SIGTERM "$pid"
+
+    sleep 1
+  fi
+  echo "Done"
+  exit 0; # 128 + 15 -- SIGTERM
+}
+
+# setup handlers
+# on callback, kill the last background process, which is `tail -f /dev/null` and execute the specified handler
+trap 'kill ${!}; term_handler' SIGTERM
+
 
 TEMP_DIR="/tmp/filewave"
 if [ ! "$(ls -A /fwxserver/DB)" ]; then
@@ -34,5 +55,15 @@ fi
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
 
-/usr/local/filewave/python.v27/bin/supervisord -n -c /usr/local/etc/filewave/supervisor/supervisord-server.conf
+# Remove garbage from previous execution
+rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
+
+# Run Supervisord in daemon mode
+/usr/local/filewave/python.v27/bin/supervisord -c /usr/local/etc/filewave/supervisor/supervisord-server.conf
+
+# wait forever
+while true
+do
+  tail -f /dev/null & wait ${!}
+done
 
