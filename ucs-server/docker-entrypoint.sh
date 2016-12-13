@@ -22,9 +22,17 @@ if [ ! "$( ls -A /usr/local/filewave/certs)" ]; then
 fi
 
 if [ ! "$(ls -A /usr/local/filewave/apache/conf)" ]; then
-    echo $"Restoring apache conf older"
+    echo $"Restoring apache conf folder"
    cp -r $TEMP_DIR/conf /usr/local/filewave/apache
 fi
+
+if [ ! "$(ls -A /usr/local/filewave/postgres/conf)" ]; then
+    echo $"Restoring postgres conf folder"
+   cp -r $TEMP_DIR/postgres_conf/* /usr/local/filewave/postgres/conf/
+fi
+
+# Upgrade the cluster DB (if needed) and run migrations
+/usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
 
 /usr/local/filewave/python.v27/bin/supervisord -n -c /usr/local/etc/filewave/supervisor/supervisord-server.conf
 

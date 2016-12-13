@@ -23,9 +23,6 @@ RUN unzip -o "${LINUX_ZIPFILE_NAME}" && yum install -y --nogpgcheck "$RPM_FW_SER
 WORKDIR "/"
 RUN rm -rf "${INSTALL_DIR}"
 
-# extract pre/post install/uninstall scripts
-# TODO
-
 # stop the supervisord process ...
 RUN /etc/init.d/fw-server stop
 
@@ -38,8 +35,11 @@ RUN cp -r /fwxserver/DB \
     /usr/local/filewave/apache/conf \
     /tmp/filewave/
 
+RUN cp -r /usr/local/filewave/postgresql/conf \
+    /tmp/filewave/postgres_conf
+    
 # NOTE: grouping directories reduces the number of layers in the final image (a good thing)
-VOLUME [ "/fwxserver/DB", "/fwxserver/Data Folder", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld",  "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/tmp/"]
+VOLUME [ "/fwxserver/DB", "/fwxserver/Data Folder", "/usr/local/filewave/postgresql/conf", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld",  "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/tmp/"]
 
 COPY ./docker-entrypoint.sh /
 
