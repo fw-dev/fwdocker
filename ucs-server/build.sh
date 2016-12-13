@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-export FILEWAVE_VERSION=12.0.0
-export LINUX_ZIPFILE_NAME=FileWave_Linux_${FILEWAVE_VERSION}.zip
+# FILEWAVE_VERSION=12.0.0
+FILEWAVE_VERSION=${1:-12.0.0}
+LINUX_ZIPFILE_NAME=FileWave_Linux_${FILEWAVE_VERSION}.zip
 
 if [ ! -f $LINUX_ZIPFILE_NAME ]; then
     echo Cant build - put the linux zip file in this directory
