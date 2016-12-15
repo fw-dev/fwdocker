@@ -21,6 +21,7 @@ services:
       - "20446:20446"
 
     volumes:
+      - /tmp/docker-test/postgres_conf:/usr/local/filewave/postgres/conf
       - /tmp/docker-test/apache_conf:/usr/local/filewave/apache/conf
       - /tmp/docker-test/apache_logs:/usr/local/filewave/apache/logs
       - /tmp/docker-test/apache_passwords:/usr/local/filewave/apache/passwords
