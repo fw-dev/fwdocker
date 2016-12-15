@@ -52,14 +52,16 @@ if [ ! "$(ls -A /usr/local/filewave/postgres/conf)" ]; then
    cp -r $TEMP_DIR/postgres_conf/* /usr/local/filewave/postgres/conf/
 fi
 
-# Upgrade the cluster DB (if needed) and run migrations
-/usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
-
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
+# Upgrade the cluster DB (if needed) and run migrations
+/usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
+
 # Run Supervisord in daemon mode
 /usr/local/filewave/python.v27/bin/supervisord -c /usr/local/etc/filewave/supervisor/supervisord-server.conf
+
+echo "Supervisord is running"
 
 # wait forever
 while true
