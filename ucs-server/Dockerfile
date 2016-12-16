@@ -32,6 +32,7 @@ RUN mkdir -p /tmp/filewave
 RUN cp -r /fwxserver/DB \
     /fwxserver/"Data Folder" \
     /usr/local/filewave/certs \
+    /usr/local/filewave/fwcld \
     /usr/local/filewave/apache/conf \
     /tmp/filewave/
 
