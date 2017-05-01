@@ -45,5 +45,7 @@ RUN cp -r /usr/local/filewave/postgresql/conf \
 VOLUME [ "/fwxserver/DB", "/fwxserver/Data Folder", "/usr/local/filewave/postgresql/conf", "/usr/local/filewave/apache/conf", "/usr/local/filewave/apache/logs", "/usr/local/filewave/apache/passwords", "/usr/local/filewave/certs", "/usr/local/filewave/fwcld",  "/usr/local/filewave/ipa", "/usr/local/filewave/log", "/usr/local/filewave/media", "/usr/local/filewave/tmp/"]
 
 COPY ./docker-entrypoint.sh /
+# overwrite the supervisord configuration to not use core dumps:
+COPY supervisord-server-docker-full.conf /usr/local/etc/filewave/supervisor/supervisord-server-full.conf
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
