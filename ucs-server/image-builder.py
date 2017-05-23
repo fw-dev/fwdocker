@@ -63,7 +63,7 @@ def push_on_docker_hub(client, params):
     for line in client.images.push(params['repository_name'], tag=params['tag_name'], stream=True):
         logging.info('> %s', line)
 
-    logging.info('Images %s pushed successfully', params['image_tag'])
+    logging.info('Image %s pushed successfully', params['image_tag'])
 
 def main():
 
