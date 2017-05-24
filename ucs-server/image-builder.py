@@ -6,6 +6,7 @@ import logging
 import requests
 import glob
 import shutil
+import zipfile
 
 
 def get_build_params():
@@ -13,16 +14,27 @@ def get_build_params():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     tag_name = os.getenv('IMAGE_TAG')
     workspace = os.getenv('WORKSPACE')
-    filewave_version = os.getenv('FILEWAVE_VERSION')
     repository_name = 'filewave/ucsserver'
 
+    data_file = os.path.join(workspace, 'filewave_linux.zip')
+
+    logging.info('Extracting FILEWAVE_VERSION from %s', data_file)
+    with zipfile.ZipFile(data_file, 'r') as infile:
+        for zipinfo in infile.infolist():
+            tokens = zipinfo.filename.split('-')
+            if tokens[0] == 'fwxserver':
+                filewave_version = tokens[1]
+                break
+
+    logging.info('FILEWAVE_VERSION: %s', filewave_version)
+    
     params = {
         'repository_name': repository_name,
         'tag_name': tag_name,
         'image_tag': '{}:{}'.format(repository_name, tag_name),
         'filewave_version': filewave_version,
         'workspace': workspace,
-        'data_file': os.path.join(workspace, 'filewave_linux.zip'),
+        'data_file': data_file,
         'input_file': os.path.join(base_dir, 'FileWave_Linux_{}.zip'.format(filewave_version)),
         'base_dir': base_dir,
     }
@@ -61,7 +73,7 @@ def push_on_docker_hub(client, params):
 
     logging.info('Pushing image %s to https://hub.docker.com...', params['image_tag'])
     for line in client.images.push(params['repository_name'], tag=params['tag_name'], stream=True):
-        logging.info('> %s', line)
+        logging.debug('> %s', line)
 
     logging.info('Image %s pushed successfully', params['image_tag'])
 
