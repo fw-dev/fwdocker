@@ -10,3 +10,5 @@ MANIFEST
 venc
 FileWave_Linux_*.zip
 .vscode
+.virtualenv/
+workspace
