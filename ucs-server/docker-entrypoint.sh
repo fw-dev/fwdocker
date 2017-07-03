@@ -54,7 +54,6 @@ if [ ! "$( ls -A ${FILEWAVE_BASE_DIR}/fwcld)" ]; then
     cp -r $TEMP_DIR/fwcld ${FILEWAVE_BASE_DIR}
 fi
 
-
 if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/apache/conf)" ]; then
     echo $"Restoring apache conf folder"
     cp -r $TEMP_DIR/conf ${FILEWAVE_BASE_DIR}/apache
@@ -77,6 +76,7 @@ fi
 echo $"Restoring owners for file/folders"
 chown root:apache ${FILEWAVE_BASE_DIR}/apache/passwd
 chown apache:apache ${FILEWAVE_BASE_DIR}/certs ${FILEWAVE_BASE_DIR}/certs/server.* ${FILEWAVE_BASE_DIR}/ipa ${FILEWAVE_BASE_DIR}/media 
+chwon -R apache:apache ${FILEWAVE_BASE_DIR}/apache/conf 
 chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 
 # Remove garbage from previous execution
