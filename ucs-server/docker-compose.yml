@@ -37,5 +37,6 @@ services:
       - /tmp/docker-test/filewave_log:/usr/local/filewave/log
       - /tmp/docker-test/filewave_tmp:/usr/local/filewave/tmp
       - /tmp/docker-test/server_log:/private/var/log
-       
+      - /tmp/docker-test/system_etc:/usr/local/etc
+     
     restart: unless-stopped

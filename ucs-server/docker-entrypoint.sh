@@ -64,6 +64,24 @@ if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
     cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgres/conf/
 fi
 
+ETC_DIR="/usr/local/etc"
+if [ ! "$( ls -A ${ETC_DIR})" ]; then
+    echo $"Restoring ${ETC_DIR} folder"
+    cp -r $TEMP_DIR/etc/* ${ETC_DIR}
+
+    # avoid to copy everytime supervisord scripts
+    mv $TEMP_DIR/etc/filewave $TEMP_DIR/etc/filewave.bak
+fi
+
+# On a new install we need to overwrite supervisord scripts
+if [ -d "$TEMP_DIR/etc/filewave" ]; then
+    echo $"Installing ${ETC_DIR}/filewave folder"
+    cp -r $TEMP_DIR/etc/filewave ${ETC_DIR}
+
+    # avoid to copy everytime supervisord scripts
+    mv $TEMP_DIR/etc/filewave $TEMP_DIR/etc/filewave.bak
+fi
+
 FILEWAVE_TMP_DIR="${FILEWAVE_BASE_DIR}/tmp"
 if [ -f "$FILEWAVE_TMP_DIR/settings_custom.py" ]; then
     echo $"Restoring settings_custom file"
