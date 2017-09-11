@@ -105,6 +105,12 @@ rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 # The previous command initialize django, so the owner of the log files has to be changed here
 chown -R apache:apache ${FILEWAVE_BASE_DIR}/fwcld ${FILEWAVE_BASE_DIR}/log
 
+# for supervisord to always expand the environment variables. See /usr/local/etc/filewave/supervisor/supervisord-server.conf
+export http_proxy=""
+export https_proxy=""
+export no_proxy=""
+. /etc/environment
+
 # Run Supervisord in daemon mode
 ${SUPERVISOR_BASE_PATH}/supervisord -c /usr/local/etc/filewave/supervisor/supervisord-server.conf
 
