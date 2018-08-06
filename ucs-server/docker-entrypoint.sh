@@ -59,6 +59,9 @@ if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/apache/conf)" ]; then
     cp -r $TEMP_DIR/conf ${FILEWAVE_BASE_DIR}/apache
 fi
 
+# copy httpd.conf in all cases (oterwise we won't have its new version for 12.9)
+cp -f $TEMP_DIR/conf/httpd.conf ${FILEWAVE_BASE_DIR}/apache/conf/httpd.conf
+
 if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
     echo $"Restoring postgres conf folder"
     cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgres/conf/
