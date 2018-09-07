@@ -64,14 +64,6 @@ function check_duplicates() {
   check_count 'admin.user_status_scripts' 'user_status_id,file_id'
 }
 
-if [ -d "/fwxserver/DB" ]; then
-    echo "Checking inconsistencies in the DB"
-    $SUPERVISORCTL start postgres
-    check_duplicates
-    $SUPERVISORCTL stop postgres
-    echo "No inconsistencies found in the DB"
-fi
-
 TEMP_DIR="/tmp/filewave"
 if [ ! "$(ls -A /fwxserver/DB)" ]; then
     echo $"Restoring DB folder"
@@ -144,6 +136,14 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
+
+if [ -f "/fwxserver/DB/pg_data/PG_VERSION" ]; then
+    echo "Checking inconsistencies in the DB"
+    $SUPERVISORCTL start postgres
+    check_duplicates
+    $SUPERVISORCTL stop postgres
+    echo "No inconsistencies found in the DB"
+fi
 
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
