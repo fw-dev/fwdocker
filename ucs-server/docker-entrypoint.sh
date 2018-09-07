@@ -137,13 +137,8 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
-if [ -f "/fwxserver/DB/pg_data/PG_VERSION" ]; then
-    echo "Checking inconsistencies in the DB"
-    $SUPERVISORCTL start postgres
-    check_duplicates
-    $SUPERVISORCTL stop postgres
-    echo "No inconsistencies found in the DB"
-fi
+# Check duplicates in the DB
+/usr/local/filewave/python/bin/python -m fwcontrol.postgres check_duplicates
 
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
