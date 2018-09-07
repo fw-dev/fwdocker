@@ -29,41 +29,6 @@ term_handler() {
 trap 'kill ${!}; term_handler' SIGTERM
 
 
-function check_count() {
-  c=`/usr/local/filewave/postgresql/bin/psql -U postgres -d mdm -c "SELECT count(*) from $1 group by $2 having count(*) > 1;" -t -A -0 -R "" 2>&1`
-  if [ -n "$c" ]; then
-    echo "FileWave installer detected problems with internal database; please contact FileWave support. Your server has been reverted to the previous state."
-    exit 1
-  fi
-}
-
-function check_duplicates() {
-  tables=`/usr/local/filewave/postgresql/bin/psql -U postgres -d mdm -c "SELECT CONCAT(table_schema, '.', table_name) as t \
-          FROM information_schema.tables WHERE table_schema IN ('admin', 'public') \
-          ORDER BY table_schema,table_name;" -t -A -0 -R " "`
-  IFS=' ' read -r -a array <<< $tables
-  for element in "${array[@]}"
-  do
-    pk=`/usr/local/filewave/postgresql/bin/psql -U postgres -d mdm -c "SELECT a.attname \
-                              FROM pg_index i \
-                              JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey) \
-                              WHERE i.indrelid = '$element'::regclass AND i.indisprimary;" -t -A -0 -R " "`
-    pk="${pk// /,}"
-    check_count "$element" "$pk"
-  done
-  
-  check_count 'admin.admin_item_permissions' 'admin_id,item_id'
-  check_count 'admin.administrator' 'shortname'
-  check_count 'admin.mobile_client_info' 'ucg_id'
-  check_count 'admin.mobile_client_info' 'udid'
-  check_count 'admin.mobile_enterprise_fileset_info' 'fileset_id,ios_enterprise_app_id'
-  check_count 'admin.mobile_ioshostedmedia_fileset_info' 'fileset_id,ios_hosted_media_id'
-  check_count 'admin.name_value_pair' 'name'
-  check_count 'admin.user_identity' 'short_name,ucg_id'
-  check_count 'admin.user_status' 'user_id,fileset_id'
-  check_count 'admin.user_status_scripts' 'user_status_id,file_id'
-}
-
 TEMP_DIR="/tmp/filewave"
 if [ ! "$(ls -A /fwxserver/DB)" ]; then
     echo $"Restoring DB folder"
