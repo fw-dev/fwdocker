@@ -102,6 +102,9 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
+# Check duplicates in the DB
+/usr/local/filewave/python/bin/python -u -m fwcontrol.postgres check_duplicates || exit 1
+
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
 
