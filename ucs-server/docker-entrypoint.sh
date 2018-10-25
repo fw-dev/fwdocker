@@ -103,13 +103,20 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
 # Check duplicates in the DB
-su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl start -w -D /fwxserver/DB/pg_data -s" # make sure postgres is running
-/usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -f -q 
-retVal=$?
-su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl stop -w -D /fwxserver/DB/pg_data -m fast -s" # make sure postgres is stopped again
-if [ $retVal -ne 0 ]; then
-     echo "FileWave installer detected problems with internal database; please contact FileWave support. Your server has been reverted to the previous state."
-     exit 1
+if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "preinst" script (which we added to version 13.0.1 on UCS), so when it's there it's an upgrade.
+    echo "Checking database health."
+    su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl start -w -D /fwxserver/DB/pg_data -s" # make sure postgres is running
+    oldVersion=$(cat /usr/local/filewave/tmp/FW_VERSION)
+    /usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -q -f --ref-version "$oldVersion"
+    retVal=$?
+    rm -f /usr/local/filewave/tmp/FW_VERSION
+    su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl stop -w -D /fwxserver/DB/pg_data -m fast -s" # make sure postgres is stopped again
+    if [ $retVal -ne 0 ]; then
+        echo "FileWave installer detected problems with internal database; please contact FileWave support. Your server has been reverted to the previous state."
+        exit 1
+    fi
+else
+    echo "No previous version detected. Skip Database check..."
 fi
 
 # Upgrade the cluster DB (if needed) and run migrations
