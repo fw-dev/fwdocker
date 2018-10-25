@@ -103,7 +103,14 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
 # Check duplicates in the DB
-/usr/local/filewave/python/bin/python -u -m fwcontrol.postgres check_duplicates || exit 1
+su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl start -w -D /fwxserver/DB/pg_data -s" # make sure postgres is running
+/usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -f -q 
+retVal=$?
+su postgres -c "usr/local/filewave/postgresql/bin/pg_ctl stop -w -D /fwxserver/DB/pg_data -m fast -s" # make sure postgres is stopped again
+if [ $retVal -ne 0 ]; then
+     echo "FileWave installer detected problems with internal database; please contact FileWave support. Your server has been reverted to the previous state."
+     exit 1
+fi
 
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
