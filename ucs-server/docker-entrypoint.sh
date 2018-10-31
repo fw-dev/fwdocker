@@ -103,7 +103,43 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
 
 # Check duplicates in the DB
-/usr/local/filewave/python/bin/python -u -m fwcontrol.postgres check_duplicates || exit 1
+if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "preinst" script (which we added to version 13.0.1 on UCS), so when it's there it's an upgrade.
+    echo "Checking database health."
+    su postgres -c "/usr/local/filewave/postgresql/bin/pg_ctl start -w -D /fwxserver/DB/pg_data -s" # start postgres
+    # make sure postgres is running
+    for i in {1..30}; do
+		$PG_BIN_DIR/pg_isready -d mdm -U django -q && break
+		printf "."
+		sleep .5
+	done
+ 	if [ ! -e "/fwxserver/DB/pg_data/postmaster.pid" ]; then
+	    echo "Could not start postgres." && exit 3
+    fi
+
+    oldVersion=$(cat /usr/local/filewave/tmp/FW_VERSION)
+    /usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -q -f --ref-version "$oldVersion"
+    retVal=$?
+    rm -f /usr/local/filewave/tmp/FW_VERSION
+    # stopping Postgres
+    while true; do
+	    su postgres -c "/usr/local/filewave/postgresql/bin/pg_ctl stop -w -D /fwxserver/DB/pg_data -m fast -s" 2> /dev/null || true
+        # check if postmaster.pid file exists and its process is actually running
+        if [[ -e "/fwxserver/DB/pg_data/postmaster.pid" ]] && [[ ! -z $(ps -p `head -1 /fwxserver/DB/pg_data/postmaster.pid` | grep postmaster) ]]; then
+	        printf "."
+	        sleep .5
+        else
+            # it is safe to remove postmaster.pid cause the process doesn't exist anyway
+            rm -f /fwxserver/DB/pg_data/postmaster.pid
+            break
+        fi
+    done
+    if [ $retVal -ne 0 ]; then
+        echo "FileWave installer detected problems with internal database; please contact FileWave support. Your server has been reverted to the previous state."
+        exit 1
+    fi
+else
+    echo "No previous version detected. Skip Database check..."
+fi
 
 # Upgrade the cluster DB (if needed) and run migrations
 /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
