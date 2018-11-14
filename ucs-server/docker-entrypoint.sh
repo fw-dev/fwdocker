@@ -117,7 +117,7 @@ if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "p
     fi
 
     oldVersion=$(cat /usr/local/filewave/tmp/FW_VERSION)
-    /usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -q -f --ref-version "$oldVersion"
+    /usr/local/filewave/python/bin/python /usr/local/filewave/django/filewave/fw_util/check_db_errors/check_db_errors.pyc -q --ref-version "$oldVersion"
     retVal=$?
     rm -f /usr/local/filewave/tmp/FW_VERSION
     # stopping Postgres
