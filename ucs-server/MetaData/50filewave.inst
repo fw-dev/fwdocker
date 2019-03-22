@@ -1,0 +1,31 @@
+#! /bin/bash
+
+VERSION=1
+. /usr/share/univention-appcenter/joinscripthelper.sh
+joinscript_init
+
+SERVICE="filewave"
+
+eval "$(ucr shell)"
+
+ucr set \
+security/packetfilter/package/"$APP"/tcp/20443/all="ACCEPT" \
+security/packetfilter/package/"$APP"/tcp/20443/all/en="$APP" \
+security/packetfilter/package/"$APP"/tcp/20445/all="ACCEPT" \
+security/packetfilter/package/"$APP"/tcp/20445/all/en="$APP" \
+security/packetfilter/package/"$APP"/tcp/20446/all="ACCEPT" \
+security/packetfilter/package/"$APP"/tcp/20446/all/en="$APP"
+
+[ -x "/etc/init.d/univention-firewall" ] &&
+	service univention-firewall restart
+
+. /usr/share/univention-lib/ldap.sh
+LDAP_HOST=$(/usr/sbin/univention-config-registry get ldap/master)
+LDAP_PORT=$(/usr/sbin/univention-config-registry get ldap/master/port)
+joinscript_add_simple_app_system_user "$@"
+joinscript_run_in_container /usr/local/filewave/python/bin/python /usr/local/filewave/django/manage.pyc configure_ucs_ldap_server "$APP" "$LDAP_HOST" "$LDAP_PORT" "$ldap_base"
+
+ucs_addServiceToLocalhost "$SERVICE" "$@"
+
+joinscript_save_current_version
+exit 0
