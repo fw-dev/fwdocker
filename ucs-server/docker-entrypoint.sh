@@ -96,7 +96,9 @@ fi
 
 echo $"Restoring owners for file/folders"
 chown root:apache ${FILEWAVE_BASE_DIR}/apache/passwd
-chown apache:apache ${FILEWAVE_BASE_DIR}/certs ${FILEWAVE_BASE_DIR}/certs/server.* ${FILEWAVE_BASE_DIR}/certs/db_symmetric_key*.aes ${FILEWAVE_BASE_DIR}/certs/ca_for_clients.* ${FILEWAVE_BASE_DIR}/certs/ca_for_mdm_clients.* ${FILEWAVE_BASE_DIR}/certs/zmq_*_curve.keypair ${FILEWAVE_BASE_DIR}/ipa ${FILEWAVE_BASE_DIR}/media ${FILEWAVE_BASE_DIR}/apache/conf ${FILEWAVE_BASE_DIR}/apache/conf/*
+chown apache:apache ${FILEWAVE_BASE_DIR}/certs ${FILEWAVE_BASE_DIR}/certs/server.* ${FILEWAVE_BASE_DIR}/certs/db_symmetric_key*.aes ${FILEWAVE_BASE_DIR}/ipa ${FILEWAVE_BASE_DIR}/media ${FILEWAVE_BASE_DIR}/apache/conf ${FILEWAVE_BASE_DIR}/apache/conf/*
+chown apache:apache ${FILEWAVE_BASE_DIR}/certs/ca_for_clients.* ${FILEWAVE_BASE_DIR}/certs/ca_for_mdm_clients.* || true
+chown apache:apache ${FILEWAVE_BASE_DIR}/certs/zmq_*_curve.keypair || true
 chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 
 # Remove garbage from previous execution
