@@ -2,6 +2,6 @@ backports.ssl-match-hostname==3.5.0.1
 docker==2.3.0
 docker-pycreds==0.2.1
 ipaddress==1.0.18
-requests==2.14.2
+requests==2.20.0
 six==1.10.0
 websocket-client==0.40.0
