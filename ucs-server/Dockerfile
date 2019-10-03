@@ -31,8 +31,8 @@ RUN /etc/init.d/fw-server stop
 RUN mkdir -p /tmp/filewave
 
 # Copy all the FW directories in the temporary space
-RUN cp -r /fwxserver/DB \
-    /fwxserver/"Data Folder" \
+RUN cp -r /usr/local/filewave/fwxserver/DB \
+    /usr/local/filewave/fwxserver/"Data Folder" \
     /usr/local/filewave/certs \
     /usr/local/filewave/fwcld \
     /usr/local/filewave/apache/conf \
@@ -44,8 +44,8 @@ RUN cp -r /usr/local/filewave/postgresql/conf \
 
 # NOTE: grouping directories reduces the number of layers in the final image (a good thing)
 VOLUME [ \
-    "/fwxserver/DB", \
-    "/fwxserver/Data Folder", \
+    "/usr/local/filewave/fwxserver/DB", \
+    "/usr/local/filewave/fwxserver/Data Folder", \
     "/usr/local/filewave/postgresql/conf", \
     "/usr/local/filewave/apache/conf", \
     "/usr/local/filewave/apache/logs", \
