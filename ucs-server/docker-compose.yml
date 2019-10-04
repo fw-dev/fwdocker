@@ -29,7 +29,7 @@ services:
       - /tmp/docker-test/apache_logs:/usr/local/filewave/apache/logs
       - /tmp/docker-test/apache_passwords:/usr/local/filewave/apache/passwords
       - /tmp/docker-test/db_folder:/usr/local/filewave/fwxserver/DB
-      - /tmp/docker-test/data_folder:/usr/local/filewave/fwxserver/Data Folde
+      - /tmp/docker-test/data_folder:/usr/local/filewave/fwxserver/Data Folder
       - /tmp/docker-test/filewave_certs:/usr/local/filewave/certs
       - /tmp/docker-test/filewave_fwcld:/usr/local/filewave/fwcld
       - /tmp/docker-test/filewave_ipa:/usr/local/filewave/ipa
