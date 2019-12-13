@@ -31,11 +31,12 @@ trap 'kill ${!}; term_handler' SIGTERM
 
 TEMP_DIR="/tmp/filewave"
 FILEWAVE_BASE_DIR="/usr/local/filewave"
-if [ ! "$(ls -A $FILEWAVE_BASE_DIR/fwxserver/DB)" ]; then
+POSTGRES_DATA_DIR="$FILEWAVE_BASE_DIR/fwxserver/DB"
+if [ ! "$(ls -A $POSTGRES_DATA_DIR)" ]; then
     echo $"Restoring DB folder"
     cp -r $TEMP_DIR/DB $FILEWAVE_BASE_DIR/fwxserver/
 
-    chown -R postgres:wheel ${FILEWAVE_BASE_DIR}/fwxserver/DB/pg_data
+    chown -R postgres:wheel $POSTGRES_DATA_DIR/pg_data
 fi
 
 DATA_FOLDER="Data Folder"
@@ -103,19 +104,20 @@ chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
 
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
-rm -f /usr/local/filewave/apache/logs/*pid ${FILEWAVE_BASE_DIR}/fwxserver/DB/pg_data/*.pid
+rm -f $POSTGRES_DATA_DIR/pg_data/*.pid
 
 # Check duplicates in the DB
 if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "preinst" script (which we added to version 13.0.1 on UCS), so when it's there it's an upgrade.
     echo "Checking database health."
-    su postgres -c "/usr/local/filewave/postgresql/bin/pg_ctl start -w -D $FILEWAVE_BASE_DIR/fwxserver/DB/pg_data -s" # start postgres
+    PG_BIN_DIR="/usr/local/filewave/postgresql/bin"
+    su postgres -c "$PG_BIN_DIR/pg_ctl start -w -D $POSTGRES_DATA_DIR/pg_data -s" # start postgres
     # make sure postgres is running
     for i in {1..30}; do
 		$PG_BIN_DIR/pg_isready -d mdm -U django -q && break
 		printf "."
 		sleep .5
 	done
- 	if [ ! -e "$FILEWAVE_BASE_DIR/fwxserver/DB/pg_data/postmaster.pid" ]; then
+ 	if [ ! -e "$POSTGRES_DATA_DIR/pg_data/postmaster.pid" ]; then
 	    echo "Could not start postgres." && exit 3
     fi
 
@@ -125,14 +127,14 @@ if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "p
     rm -f /usr/local/filewave/tmp/FW_VERSION
     # stopping Postgres
     while true; do
-	    su postgres -c "/usr/local/filewave/postgresql/bin/pg_ctl stop -w -D /fwxserver/DB/pg_data -m fast -s" 2> /dev/null || true
+	    su postgres -c "$PG_BIN_DIR/pg_ctl stop -w -D $POSTGRES_DATA_DIR/pg_data -m fast -s" 2> /dev/null || true
         # check if postmaster.pid file exists and its process is actually running
-        if [[ -e "$FILEWAVE_BASE_DIR/fwxserver/DB/pg_data/postmaster.pid" ]] && [[ ! -z $(ps -p `head -1 $FILEWAVE_BASE_DIR/fwxserver/DB/pg_data/postmaster.pid` | grep postmaster) ]]; then
+        if [[ -e "$POSTGRES_DATA_DIR/pg_data/postmaster.pid" ]] && [[ ! -z $(ps -p `head -1 $POSTGRES_DATA_DIR/pg_data/postmaster.pid` | grep postmaster) ]]; then
 	        printf "."
 	        sleep .5
         else
             # it is safe to remove postmaster.pid cause the process doesn't exist anyway
-            rm -f $FILEWAVE_BASE_DIR/fwxserver/DB/pg_data/postmaster.pid
+            rm -f $POSTGRES_DATA_DIR/pg_data/postmaster.pid
             break
         fi
     done
