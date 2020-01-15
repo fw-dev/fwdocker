@@ -129,7 +129,7 @@ if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "p
     while true; do
 	    su postgres -c "$PG_BIN_DIR/pg_ctl stop -w -D $POSTGRES_DATA_DIR/pg_data -m fast -s" 2> /dev/null || true
         # check if postmaster.pid file exists and its process is actually running
-        if [[ -e "$POSTGRES_DATA_DIR/pg_data/postmaster.pid" ]] && [[ ! -z $(ps -p `head -1 $POSTGRES_DATA_DIR/pg_data/postmaster.pid` | grep postmaster) ]]; then
+        if [[ -e "$POSTGRES_DATA_DIR/pg_data/postmaster.pid" ]] && [[ ! -z $(ps --no-heading -p `head -1 $POSTGRES_DATA_DIR/pg_data/postmaster.pid`) ]]; then
 	        printf "."
 	        sleep .5
         else
