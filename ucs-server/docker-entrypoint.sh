@@ -65,7 +65,7 @@ cp -f $TEMP_DIR/conf/httpd.conf ${FILEWAVE_BASE_DIR}/apache/conf/httpd.conf
 
 if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
     echo $"Restoring postgres conf folder"
-    cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgres/conf/
+    cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/conf/
 fi
 
 ETC_DIR="/usr/local/etc"
