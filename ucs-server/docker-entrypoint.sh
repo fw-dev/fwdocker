@@ -65,7 +65,10 @@ cp -f $TEMP_DIR/conf/httpd.conf ${FILEWAVE_BASE_DIR}/apache/conf/httpd.conf
 
 if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
     echo $"Restoring postgres conf folder"
-    cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/conf/
+    # since we're using old db config file, PG expects user_postgresql.conf 
+    # to be at its old directory
+    mkdir -p ${FILEWAVE_BASE_DIR}/postgresql/conf
+    cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgresql/conf/
 fi
 
 ETC_DIR="/usr/local/etc"
@@ -100,7 +103,7 @@ chown root:apache ${FILEWAVE_BASE_DIR}/apache/passwd
 chown apache:apache ${FILEWAVE_BASE_DIR}/certs ${FILEWAVE_BASE_DIR}/certs/server.* ${FILEWAVE_BASE_DIR}/certs/db_symmetric_key*.aes ${FILEWAVE_BASE_DIR}/ipa ${FILEWAVE_BASE_DIR}/media ${FILEWAVE_BASE_DIR}/apache/conf ${FILEWAVE_BASE_DIR}/apache/conf/*
 chown apache:apache ${FILEWAVE_BASE_DIR}/certs/ca_for_clients.* ${FILEWAVE_BASE_DIR}/certs/ca_for_mdm_clients.* || true
 chown apache:apache ${FILEWAVE_BASE_DIR}/certs/zmq_*_curve.keypair || true
-chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.*
+chown postgres:daemon ${FILEWAVE_BASE_DIR}/certs/postgres.* || true
 
 # Remove garbage from previous execution
 rm -f /usr/local/filewave/apache/logs/*pid /fwxserver/DB/pg_data/*.pid
@@ -109,7 +112,7 @@ rm -f $POSTGRES_DATA_DIR/pg_data/*.pid
 # Check duplicates in the DB
 if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "preinst" script (which we added to version 13.0.1 on UCS), so when it's there it's an upgrade.
     echo "Checking database health."
-    PG_BIN_DIR="/usr/local/filewave/postgresql/bin"
+    PG_BIN_DIR="/usr/local/filewave/postgresql-9.6/bin"
     su postgres -c "$PG_BIN_DIR/pg_ctl start -w -D $POSTGRES_DATA_DIR/pg_data -s" # start postgres
     # make sure postgres is running
     for i in {1..30}; do
@@ -146,8 +149,13 @@ else
     echo "No previous version detected. Skip Database check..."
 fi
 
+# delete postgresql directroy that we created earlier to run check_db
+rm -rf ${FILEWAVE_BASE_DIR}/postgresql
+echo "FOOBAR"
+ls ${FILEWAVE_BASE_DIR}
+
 # Upgrade the cluster DB (if needed) and run migrations
-/usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
+PYTHONPATH="$FILEWAVE_BASE_DIR/django" /usr/local/filewave/python/bin/python -m fwcontrol.postgres init_or_upgrade_db_folder
 
 # The previous command initialize django, so the owner of the log files has to be changed here
 chown -R apache:apache ${FILEWAVE_BASE_DIR}/fwcld ${FILEWAVE_BASE_DIR}/log
