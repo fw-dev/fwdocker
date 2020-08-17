@@ -39,8 +39,11 @@ RUN cp -r /usr/local/filewave/fwxserver/DB \
     /usr/local/etc \
     /tmp/filewave/
 
-RUN cp -r /usr/local/filewave/conf \
-    /tmp/filewave/postgres_conf
+# Copy user_postgresql.conf, it should be in one of these places
+RUN mkdir -p /tmp/filewave/postgres_conf
+RUN cp -r /usr/local/filewave/conf/* \
+    /usr/local/filewave/postgresql/conf/* \
+    /tmp/filewave/postgres_conf/ 2> /dev/null || true
 
 # NOTE: grouping directories reduces the number of layers in the final image (a good thing)
 VOLUME [ \
