@@ -63,12 +63,28 @@ fi
 # copy httpd.conf in all cases (oterwise we won't have its new version for 12.9)
 cp -f $TEMP_DIR/conf/httpd.conf ${FILEWAVE_BASE_DIR}/apache/conf/httpd.conf
 
-if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
-    echo $"Restoring postgres conf folder"
-    # for v13.3.1- to v14.0, we're still using old db config file, PG expects user_postgresql.conf 
-    # to be at its old directory
-    mkdir -p ${FILEWAVE_BASE_DIR}/postgresql/conf
-    cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgresql/conf/
+PG_MAIN_VERSION=12
+OLD_PG_MAIN_VERSION=9.6
+
+oldVersion=$(cat /usr/local/filewave/tmp/FW_VERSION 2>/dev/null)
+IFS='.' read -r -a versionArray <<< $oldVersion
+major_version_with_new_db_version=14
+# We've updated PG version from 9.6 to 12.2 for FileWave 14.0.0
+# check major version to see which PG version should be used
+if [[ ! -z "${versionArray[0]}" && ${versionArray[0]} -lt $major_version_with_new_db_version ]]; then
+    UPGRADE_FROM_OLD_DB=true
+    # for v13.3.1- to v14.0, we're still using old db config file, PG expects user_postgresql.conf
+    # later init_or_upgrade_db_folder will move user_postgresql.conf file to it's correct path.
+    echo "Upgrading from pre-version 14.0.0..."
+    if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/postgres/conf)" ]; then
+        mkdir -p ${FILEWAVE_BASE_DIR}/postgresql/conf
+        cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/postgresql/conf/
+    fi
+else
+    UPGRADE_FROM_OLD_DB=false
+    if [ ! "$(ls -A ${FILEWAVE_BASE_DIR}/conf)" ]; then
+        cp -r $TEMP_DIR/postgres_conf/* ${FILEWAVE_BASE_DIR}/conf/
+    fi
 fi
 
 ETC_DIR="/usr/local/etc"
@@ -112,8 +128,13 @@ rm -f $POSTGRES_DATA_DIR/pg_data/*.pid
 # Check duplicates in the DB
 if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "preinst" script (which we added to version 13.0.1 on UCS), so when it's there it's an upgrade.
     echo "Checking database health."
-    # use old DB executables, cause the data folder is not upgraded yet
-    PG_BIN_DIR="/usr/local/filewave/postgresql-9.6/bin"
+    # use old DB executables for pre-v14 version, cause the data folder is not upgraded yet
+    if [ "$UPGRADE_FROM_OLD_DB" = true ]; then
+        PG_BIN_DIR="/usr/local/filewave/postgresql-$OLD_PG_MAIN_VERSION/bin"
+    else
+        PG_BIN_DIR="/usr/local/filewave/postgresql-$PG_MAIN_VERSION/bin"
+    fi
+    
     su postgres -c "$PG_BIN_DIR/pg_ctl start -w -D $POSTGRES_DATA_DIR/pg_data -s" # start postgres
     # make sure postgres is running
     for i in {1..30}; do
