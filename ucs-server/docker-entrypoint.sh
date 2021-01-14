@@ -1,5 +1,10 @@
 #! /bin/bash
 
+# Fix the timezone
+export TZ=`cat /etc/timezone`
+ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+
+
 SUPERVISOR_BASE_PATH="/usr/local/filewave/python.v27/bin"
 if [ ! -f "${SUPERVISOR_BASE_PATH}/supervisord" ]; then
     SUPERVISOR_BASE_PATH="/usr/local/filewave/python/bin"
@@ -134,7 +139,7 @@ if [[ -e /usr/local/filewave/tmp/FW_VERSION ]]; then # we create this file in "p
     else
         PG_BIN_DIR="/usr/local/filewave/postgresql-$PG_MAIN_VERSION/bin"
     fi
-    
+
     su postgres -c "$PG_BIN_DIR/pg_ctl start -w -D $POSTGRES_DATA_DIR/pg_data -s" # start postgres
     # make sure postgres is running
     for i in {1..30}; do
