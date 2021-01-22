@@ -1,37 +1,37 @@
-FROM centos:6.8
-MAINTAINER support@filewave.com
+FROM centos:7
+
+LABEL "maintainer"="support@filewave.com"
 
 ARG FILEWAVE_VERSION
 ENV FILEWAVE_VERSION ${FILEWAVE_VERSION:-12.0.0}
 
+# Analytics uses this one to detect if it's a UCS instance
 ENV FILEWAVE_INSIDE_DOCKER_VERSION=${FILEWAVE_VERSION}
 
-ENV LINUX_ZIPFILE_NAME=FileWave_Linux_${FILEWAVE_VERSION}.zip
-
-ENV RPM_FW_SERVER=fwxserver-${FILEWAVE_VERSION}-1.0.x86_64
+ENV FILEWAVE_ON_UCS=1
 
 EXPOSE 19995 19996 20005 20006 20015 20016 20017 20030 20443 20445 20446
 
-ENV INSTALL_DIR=/install
-RUN mkdir -p "${INSTALL_DIR}"
+RUN mkdir -p /install
+WORKDIR /install
+COPY fwxserver.rpm ./
 
-COPY "${LINUX_ZIPFILE_NAME}" "${INSTALL_DIR}/"
+RUN yum install -y initscripts && \
+    yum install -y --nogpgcheck /install/fwxserver.rpm && \
+    yum clean all && \
+    rm -rf /var/cache/* && \
+    /usr/local/sbin/fwxserver -V > /PRODUCT_VERSION && \
+    /usr/local/sbin/fwxserver -VV >> /PRODUCT_VERSION && \
+    /etc/init.d/fw-server stop && \
+    killall fwsu || true && \
+    rm -rf /tmp/*
 
-RUN yum -y install unzip
-
-WORKDIR "${INSTALL_DIR}"
-RUN unzip -o "${LINUX_ZIPFILE_NAME}" && yum install -y --nogpgcheck "$RPM_FW_SERVER.rpm"
-
-WORKDIR "/"
-RUN rm -rf "${INSTALL_DIR}"
-
-# stop the supervisord process ...
-RUN /etc/init.d/fw-server stop
-
-RUN mkdir -p /tmp/filewave
+WORKDIR /
+RUN rm -rf /install
 
 # Copy all the FW directories in the temporary space
-RUN cp -r /usr/local/filewave/fwxserver/DB \
+RUN mkdir -p /tmp/filewave && \
+    cp -r /usr/local/filewave/fwxserver/DB \
     /usr/local/filewave/fwxserver/"Data Folder" \
     /usr/local/filewave/certs \
     /usr/local/filewave/fwcld \
